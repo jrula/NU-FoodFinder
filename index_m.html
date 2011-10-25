@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Find Free Food in McCormick</title>
+<link href="css/mobile.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="oneColElsCtrHdr">
+
+<div id="container">
+  <div id="toprow">
+    {%  if user %}<form id="form3" name="form3" method="post" action="/logout"><input name="logout" value="logout" type="submit" /> </form>Welcome, {{ user.nickname }}
+    {% else %}<form id="form2" name="form2" method="post" action="/login"><input name="login" value="login" type="submit" /> </form>{% endif %}
+  </div>
+  <div id="header">
+    <table align="center">
+      <tr>
+        <td><img src="img/willie.gif" width="85" height="152" alt="Willie" /></td>
+        <td><h1>McCormick Free Food Finder</h1></td>
+      </tr>
+    </table>
+  <!-- end #header --></div>
+  <div id="mainContent">
+    <h1>Recent Finds...</h1>
+    <br />
+    {% for entry in recentEntries %}
+      <div id="listing">
+        <span style="float:left;">
+          <span><h5>Found {{ entry.humanizeTimeDiff }} ago...</h5></span>
+          <span><a href="http://www.mccormick.northwestern.edu/maps/roomfinder.php?room={{ entry.room }}"><h3>{{ entry.building }} {{ entry.room }}</h3></a></span>
+          <span><h5>{{ entry.entryTime|date:"P" }}</h5></span>
+          <span><h5>{{ entry.entryTime|date:"l F d, Y" }}</h5></span>
+        </span>
+        <span style="float:left;">{{ entry.foodSource }}</span>
+        <span style="float:right;"><h4>{{ entry.foodType }}</h4><br/><h5>{{ entry.rating }}</h5></span>
+        <br style="clear:both;" />
+        
+      </div>
+    {% endfor %}
+    <!--
+	<h1>All Finds...</h1>
+	<br />
+	{% for entry in allEntries %}
+	  <div id="listing">
+        <span style="float:left;">
+          <span><h5>Found {{ entry.humanizeTimeDiff }} ago...</h5></span>
+          <span><a href="http://www.mccormick.northwestern.edu/maps/roomfinder.php?room={{ entry.room }}"><h3>{{ entry.building }} {{ entry.room }}</h3></a></span>
+          <span><h5>{{ entry.entryTime|date:"P" }}</h5></span>
+          <span><h5>{{ entry.entryTime|date:"l F d, Y" }}</h5></span>
+        </span>
+        <span style="float:left;">{{ entry.foodSource }}</span>
+        <span style="float:right;"><h4>{{ entry.foodType }}</h4></span>
+        <br style="clear:both;" />
+        
+      </div>
+	
+	{% endfor %}
+	-->
+    <br />
+	<h1>Report a Find!</h1>
+	<form id="findNowForm" name="findNowForm" method="post" action="/report">
+		<p>
+        <label>Source:
+          <select name="source">
+            <option value="Luncheon" selected="Luncheon">Luncheon
+            <option value="Left Overs">Left Overs
+            <option value="Ongoing Conference">Ongoing Conference
+          </select>
+          <br />
+          <br />
+        </label>
+        <label>What is There:
+          <select name="type">
+            <option value="Food and Drinks" selected="Food and Drinks">Food and Drinks
+            <option value="Food Only">Food Only
+            <option value="Drink Only">Drink Only
+          </select>
+        </label>
+      <p>
+		<p>
+			<label>Where?
+          		<select name="building">
+            		<option value="Tech" selected="Tech">Tech
+            		<option value="Ford">Ford
+          		</select>
+        	</label>
+        	<input type="text" name="room" />
+        </p>
+        <p>
+			<label>How Much?
+				<select name="rating">
+					<option value=1>1</option>
+					<option value=2>2</option>
+					<option value=3>3</option>
+					<option value=4>4</option>
+					<option value=5>5</option>
+					
+				</select>
+				
+			</label>
+		</p>
+		<input name="submit" type="submit" value="submit" />
+	</form>
+	<!--
+	<br />
+    <form id="form1" name="form1" method="post" action="/report">
+      <p>
+        <label>Source:
+          <select name="source">
+            <option value="Luncheon" selected="Luncheon">Luncheon
+            <option value="Left Overs">Left Overs
+            <option value="Ongoing Conference">Ongoing Conference
+          </select>
+          <br />
+          <br />
+        </label>
+        <label>What is There:
+          <select name="type">
+            <option value="Food and Drinks" selected="Food and Drinks">Food and Drinks
+            <option value="Food Only">Food Only
+            <option value="Drink Only">Drink Only
+          </select>
+        </label>
+      <p>
+        <label>Where (Room Number):
+          <select name="building">
+            <option value="Tech" selected="Tech">Tech
+            <option value="Ford">Ford
+          </select>
+        </label>
+        <input type="text" name="room" />
+        <label>
+        <br />
+        <br />
+        When:
+        <label>
+          <input name="RadioGroup1" type="radio" id="RadioGroup1_0" value="now" checked="checked" />
+          Now</label>
+        <br />
+        <br />
+        <input name="submit" type="submit" value="submit" />
+    </form>
+    -->
+    <br />
+    
+	<!-- end #mainContent -->
+  </div>
+  <div id="footer">
+    <p>McCormick Free Food Finder</p>
+  <!-- end #footer --></div>
+<!-- end #container --></div>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Find Free Food in McCormick</title>
+<link href="css/styles.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript">
+function onRoomChanged() {
+  var room = document.getElementById("room").value;
+  if (room == "other") {
+    var room_text = document.getElementById("room_other");
+    var room_text_label = document.getElementById("room_other_label");
+    room_text.style.display = "inline";
+    room_text_label.style.display = "inline";
+  } else {
+    var room_text = document.getElementById("room_other");
+    var room_text_label = document.getElementById("room_other_label");
+    room_text.style.display = "none";
+    room_text_label.style.display = "none";
+  }
+}
+</script>
+</head>
+
+<body class="oneColElsCtrHdr">
+
+<div id="container">
+  <div id="toprow">
+    {%  if user %}<form id="form3" name="form3" method="get" action="/logout">Welcome, {{ user.username }}<input name="logout" value="logout" type="submit" /> | <input type="button" value="edit profile" onclick="window.location.href='/edit'" /></form>
+    {% else %}<form id="form2" name="form2" method="post" action="/login"><label>Username:<input name="user" id="name" type="text"></label><label>Password:<input name="pass" id="pass" type="password"></label><input name="login" value="login" type="submit" /> | <input type="button" value="register" onclick="window.location.href='/register'" /></form>{% endif %}
+  </div>
+  <div id="header">
+    <table align="center">
+      <tr>
+        <td><img src="img/willie.gif" width="85" height="152" alt="Willie" /></td>
+        <td><h1>McCormick Free Food Finder</h1></td>
+      </tr>
+    </table>
+  <!-- end #header --></div>
+  <div id="mainContent">
+    <h1 style="margin:0px 0px 0px 0px; padding: 0px 0px 0px 0px;">Report Find...</h1> <br />
+    <form id="form2" name="form2" method="post" action="/report2">
+      <div style="border:2px solid; border-radius:20px;padding:10px 10px 10px 10px;background:#DDDDDD;">
+        <table width="680px">
+          <tr>
+          <td width="180px"><label>Where (Room Number):</td>
+          <td>
+            <select class="inputForm" name="room" id="room" onchange="onRoomChanged();">
+              <option value="EECS Copy Room" selected="EECS Copy Room">EECS Copy Room
+              <option value="Ford 2.227">Ford 2.227
+              <option value="Ford ITW Room">Ford ITW Room
+              <option value="other">Other...
+            </select>
+          </label>
+          <label id="room_other_label" style="display:none;">Other:
+            <input class="inputForm" type="text" id="room_other" name="room_other" value="" style="display:none;"/>
+         </label>
+         </td></tr>
+         <tr>
+         <td><label>Food Amount:</td>
+         <td>
+             <select class="inputForm" name="foodAmount">
+               <option value="1">Snack
+               <option value="2" selected="Partial Meal">Partial Meal
+           	  <option value="3">Full Meal
+            </select>
+          </label>
+          </td></tr>
+          <tr>
+          <td><label>Drink Amount:</td>
+          <td>
+            <select class="inputForm" name="drinkAmount">
+              <option value="0" selected="None">None
+              <option value="1">Hot
+              <option value="2">Cold
+              <option value="3">Both
+            </select>
+          </label>
+          </td></tr>
+          <tr>
+          <td><label>Supervision:</td>
+          <td>
+          <input type="checkbox" name="supervision" value="supervision" style="margin-top:5px;"/>
+          </label> 
+          </td></tr>
+          <tr>
+          <td colspan="2" style="text-align:center;"><input class="inputForm" name="submit" type="submit" value="REPORT" style="width:150px;background:#FFFFFF;border:2px solid;" /></td>
+          </tr></table>
+      </div>
+    </form>
+    <br />
+    
+    <h1 style="margin:0px 0px 0px 0px; padding: 0px 0px 0px 0px;">All Finds</h1>
+    <span style="float:right;margin-right:15px;"><table><tr><td style="width:75px;text-align:center;font-size:0.8em;" >Food</td><td style="width:75px;text-align:center;font-size:0.8em;">Drink</td><td style="width:75px;text-align:center;font-size:0.8em;"">Supervision</td></tr></table></span>
+    <div> 
+    {% for entry in allEntries2 %}
+      <div id="listing">
+        <span style="float:left;">
+          <span><h5>Found {{ entry.humanizeTimeDiff }} ago...</h5></span>
+          <span><h3>{{ entry.room }}</h3></span>
+          <span><h5>{{ entry.time|date:"P" }}</h5></span>
+          <span><h5>{{ entry.time|date:"l F d, Y" }}</h5></span>
+        </span>
+        <span style="float:right;">
+          <table>
+            <tr>
+              <td style="width:75px;height:75px;margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;">
+                {% ifequal entry.foodAmount 1 %}
+                  <img src="img/chips2.gif" />
+                {% else %}{% ifequal entry.foodAmount 2 %}
+                  <img src="img/sandwich.gif" />
+                {% else %}{% ifequal entry.foodAmount 3 %}
+                  <img src="img/turkey2.gif" />
+                {% else %}
+                  &nbsp;
+                {% endifequal %}{% endifequal %}{% endifequal %}
+              </td>
+              <td style="width:75px;height:75px;margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;">
+          
+                {% ifequal entry.drinkAmount 1 %}
+                  <img src="img/hot-drink.png" />
+                {% else %}{% ifequal entry.drinkAmount 2 %}
+                  <img src="img/cold-drink-bw.gif" />
+                {% else %}{% ifequal entry.drinkAmount 3 %}
+                  <img src="img/hot-cold.gif" />
+                {% else %}
+                  &nbsp;
+                {% endifequal %}{% endifequal %}{% endifequal %}
+              </td>
+              <td style="width:75px;height:75px;margin: 0px 0px 0px 0px;padding: 0px 0px 0px 0px;">             
+          
+                {% if entry.supervision %}
+                  <img src="img/evil-eyes.gif" />
+                {% else %}
+                  &nbsp;
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+          
+          
+        </span>
+        <br style="clear:both;" />
+        
+      </div>
+    {% endfor %}
+    </div>
+    <br />
+    
+	<!-- end #mainContent -->
+  </div>
+  <div id="footer">
+    <p>McCormick Free Food Finder</p>
+  <!-- end #footer --></div>
+<!-- end #container --></div>
+</body>
+</html>

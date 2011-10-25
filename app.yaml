@@ -1,0 +1,18 @@
+application: nu-findfood
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /img
+  static_dir: img
+
+- url: /css
+  static_dir: css
+  
+- url: /scripts
+  static_dir: scripts
+  
+- url: /.*
+  script: helloworld.py
+  
