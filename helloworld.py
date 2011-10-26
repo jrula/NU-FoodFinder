@@ -183,7 +183,10 @@ following URL into your browser
 
 """+"http://nu-findfood.appspot.com/validate?activate="+tmp.activation_code)
             
-        self._sync_user(tmp)
+        # since we're using an activation scheme
+        # don't give them an SID unless they've
+        # logged in directly
+        tmp.put()
             
     def get_current_user(self):
         return self._fetch_user_by_cookie()
