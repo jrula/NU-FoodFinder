@@ -1,4 +1,4 @@
-import os, uuid, sys
+import os, uuid, sys, hashlib
 from datetime import datetime
 from datetime import timedelta
 from google.appengine.ext import webapp
@@ -160,7 +160,9 @@ class session:
         tmp = User(key_name=username.lower())
         tmp.username = username
         tmp.email = email
-        tmp.password = password
+        # use SHA to generate 512bit (ultrasecure) hash. This creates a 128Byte
+        # hex digest
+        tmp.password = hashlib.sha512(password).hexdigest()
         tmp.phone_no = phone_no
         tmp.send_email_alert = email_alert
         tmp.send_phone_alert = phone_alert
@@ -181,7 +183,10 @@ following URL into your browser
 
 """+"http://nu-findfood.appspot.com/validate?activate="+tmp.activation_code)
             
-        self._sync_user(tmp)
+        # since we're using an activation scheme
+        # don't give them an SID unless they've
+        # logged in directly
+        tmp.put()
             
     def get_current_user(self):
         return self._fetch_user_by_cookie()
@@ -201,6 +206,9 @@ following URL into your browser
             user.session_id = None
             user.put()
             
+    def user_exists(self, username):
+        return User.get_by_key_name(username.lower())
+
     def _gen_session_id(self):
         return uuid.uuid4()
     
@@ -238,9 +246,11 @@ following URL into your browser
     def _fetch_user_with_pass(self, u,p):
         tmp = User.get_by_key_name(u.lower())
         if not tmp: return None
-        if tmp.password != p: return None
+        if tmp.password != hashlib.sha512(p).hexdigest(): return None
         if tmp.activated == False: return False
         return tmp
+
+
 
 class MainPage(webapp.RequestHandler):
     
@@ -449,7 +459,11 @@ class Register(webapp.RequestHandler):
         else:
             e_a = False
             
-        session(self).create_user(e,u,p,ph,e_a,ph_a)
+        if session(self).user_exists(u):
+            # show an error page "this username is taken"
+            print >> sys.stderr, "User tried to create existing name"
+        else:
+            session(self).create_user(e,u,p,ph,e_a,ph_a)
         self.redirect('/')
         
 class Edit(webapp.RequestHandler):
