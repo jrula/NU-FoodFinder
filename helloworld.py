@@ -203,6 +203,9 @@ following URL into your browser
             user.session_id = None
             user.put()
             
+    def user_exists(self, username):
+        return User.get_by_key_name(username.lower())
+
     def _gen_session_id(self):
         return uuid.uuid4()
     
@@ -243,6 +246,8 @@ following URL into your browser
         if tmp.password != hashlib.sha512(p).hexdigest(): return None
         if tmp.activated == False: return False
         return tmp
+
+
 
 class MainPage(webapp.RequestHandler):
     
@@ -451,7 +456,11 @@ class Register(webapp.RequestHandler):
         else:
             e_a = False
             
-        session(self).create_user(e,u,p,ph,e_a,ph_a)
+        if session(self).user_exists(u):
+            # show an error page "this username is taken"
+            print >> sys.stderr, "User tried to create existing name"
+        else:
+            session(self).create_user(e,u,p,ph,e_a,ph_a)
         self.redirect('/')
         
 class Edit(webapp.RequestHandler):
