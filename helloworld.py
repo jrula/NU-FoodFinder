@@ -1,4 +1,4 @@
-import os, uuid, sys
+import os, uuid, sys, hashlib
 from datetime import datetime
 from datetime import timedelta
 from google.appengine.ext import webapp
@@ -160,7 +160,9 @@ class session:
         tmp = User(key_name=username.lower())
         tmp.username = username
         tmp.email = email
-        tmp.password = password
+        # use SHA to generate 512bit (ultrasecure) hash. This creates a 128Byte
+        # hex digest
+        tmp.password = hashlib.sha512(password).hexdigest()
         tmp.phone_no = phone_no
         tmp.send_email_alert = email_alert
         tmp.send_phone_alert = phone_alert
@@ -238,7 +240,7 @@ following URL into your browser
     def _fetch_user_with_pass(self, u,p):
         tmp = User.get_by_key_name(u.lower())
         if not tmp: return None
-        if tmp.password != p: return None
+        if tmp.password != hashlib.sha512(p).hexdigest(): return None
         if tmp.activated == False: return False
         return tmp
 
