@@ -1,0 +1,9 @@
+- include food type legend
+- use AJAX for table updates and login
+- make profile edit page not say "register"
+- clean up the interface
+- alert format e-mails as HTML
+- add user-aware reporting (for top contributors) 
+- don't redirect to Google's bad login page
+- implement phone alerts
+
