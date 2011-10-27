@@ -1,4 +1,4 @@
-import os, uuid, sys, hashlib
+import os, uuid, sys, hashlib, time
 from datetime import datetime
 from datetime import timedelta
 from google.appengine.ext import webapp
@@ -151,6 +151,7 @@ class session:
         
         self.handler = handler
         self.session_id = None
+        self.username = None
         
     def create_user(self, email, username, password, phone_no, email_alert, phone_alert):
         
@@ -180,9 +181,6 @@ following URL into your browser
 
 """+"http://nu-findfood.appspot.com/validate?activate="+tmp.activation_code)
             
-        # since we're using an activation scheme
-        # don't give them an SID unless they've
-        # logged in directly
         tmp.put()
             
     def get_current_user(self):
@@ -199,9 +197,17 @@ following URL into your browser
         
         user = self._fetch_user_by_cookie()
         if user:
-            memcache.delete(user.session_id)
+            # revoke their cookie by setting expire date in past
+            # and setting cookie val to null
+            expire = datetime.now() + timedelta(hours=-1)
+            expire_str = expire.strftime("%a, %d-%b-%Y %H:%M:%S GMT")
+            cook = 'username=; expires=%s;' % expire_str
+            self.handler.response.headers.add_header('Set-Cookie', cook)
+            cook = 'sid=; expires=%s;' % expire_str
+            self.handler.response.headers.add_header('Set-Cookie', cook)
             user.session_id = None
             user.put()
+            # memcache.delete(user.session_id)
             
     def user_exists(self, username):
         return User.get_by_key_name(username.lower())
@@ -210,37 +216,80 @@ following URL into your browser
         return uuid.uuid4()
     
     def _sync_user(self, _user):
-        sid = str(self._gen_session_id())
-        ssid = '='.join(('ssid',sid))
-        self.handler.response.headers.add_header('Set-Cookie',ssid)
-        _user.session_id = sid
-        self.session_id = sid
+        uuid = str(self._gen_session_id())
+
+        #  we will only store the uuid in cookie, the rest will be derived for security
+        #  we'll compute the actual ssid with:
+        #  512bit_hash( username + uuid + request ip_addr )
+
+        # make the cookie expire in an hour
+        expire = datetime.now() + timedelta(hours=1)
+        expire_str = expire.strftime("%a, %d-%b-%Y %H:%M:%S GMT")
+       
+        # store the username so we can derive the actual ssid
+        cook = 'username=%s; expires=%s;' %(_user.username.lower(), expire_str)
+        self.handler.response.headers.add_header('Set-Cookie', cook)
+
+        # store the plaintext sid
+        cook = 'sid=%s; expires=%s;' %(uuid, expire_str)
+        self.handler.response.headers.add_header('Set-Cookie', cook)
+
+        # hash uuid, user, and requesting IP together to form the actual ssid
+        tmpssid = '%s/%s/%s' %(_user.username.lower(), uuid, \
+        str(self.handler.request.remote_addr))
+        ssid = hashlib.sha512(tmpssid).hexdigest()
+        _user.session_id = ssid
         _user.put()
-        memcache.add(sid,_user)
+        # memcache.add(sid,_user)
         
     def _update_user(self, _user):
         _user.put()
-        memcache.add(_user.session_id, _user)
+        # memcache.add(_user.session_id, _user)
         
     def _fetch_user_by_cookie(self):
-        if not self.session_id:
-            try:
-                sid = self.handler.request.cookies['ssid']
-            except:
-                sid = ""
-                ssid = '='.join(('ssid',sid))
-                self.handler.response.headers.add_header('Set-Cookie',ssid)
+        try:
+            username = self.handler.request.cookies['username']
+        except:
+            return None
+
+        try:
+            uid = self.handler.request.cookies['sid']
+        except:
+            return None;
+
+        if username is None or uid is None:
+            return None
+
+        # derive the request ssid
+        ssid = '%s/%s/%s' %(username.lower(), uid, \
+            str(self.handler.request.remote_addr))
+        ssid = hashlib.sha512(ssid).hexdigest()
+
+        stored_ssid = db.GqlQuery("SELECT * FROM User WHERE username = :1",\
+        username.lower()).get().session_id
+
+        # this is where session hijacking should be thwarted (maybe)
+        if stored_ssid is None or ssid != stored_ssid:
+            return None
         else:
-            sid = self.session_id
+            # finally let's refresh their cookie
+            expire = datetime.now() + timedelta(hours=1)
+            expire_str = expire.strftime("%a, %d-%b-%Y %H:%M:%S GMT")
+
+            cook = 'username=%s; expires=%s;' %(username.lower(), expire_str)
+            self.handler.response.headers.add_header('Set-Cookie', cook)
+
+            cook = 'sid=%s; expires=%s;' %(uid, expire_str)
+            self.handler.response.headers.add_header('Set-Cookie', cook)
+
+            return User.all().filter('username = ', username.lower()).get()
             
-        data = memcache.get(sid)
-        if data is None:
-            data = User.all().filter('session_id = ', sid).get()
-            if data is not None: memcache.add(sid, data)
+            #data = memcache.get(sid)
+            #if data is None:
+                #if data is not None: memcache.add(sid, data)
             
-        return data
     
-    def _fetch_user_with_pass(self, u,p):
+    def _fetch_user_with_pass(self, u, p):
         tmp = User.get_by_key_name(u.lower())
         if not tmp: return None
         if tmp.password != hashlib.sha512(p).hexdigest(): return None
